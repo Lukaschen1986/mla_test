@@ -7,19 +7,32 @@ import numpy as np
 import pandas as pd
 import random as rd
 from sklearn import datasets
-from sklearn import linear_model
-from sklearn.neural_network import MLPClassifier
 import matplotlib.pyplot as plt
+
+digits = datasets.load_digits()
+X = digits.data
+y = digits.target
+
+def data_split(data, prob):
+    idx_train = rd.sample(range(len(data)), int(len(data)*prob))
+    idx_test = [i for i in range(len(data)) if i not in idx_train]
+    return idx_train, idx_test
+
+idx_train, idx_test = data_split(X, 0.8)
+X_train = X[idx_train]
+y_train = y[idx_train]
+X_test = X[idx_test]
+y_test = y[idx_test]
 
 unit_vec = lambda x: x/np.sqrt(np.sum(x**2))
 
 class BpnnTrain(object):
-    def __init__(self, X, y, layer_num, neuron_num, outNum, yita, lam, iter_num):
+    def __init__(self, X, y, hidden_layer_num, neuron_num, out_num, yita, lam, iter_num):
         self.X = X
         self.y = y
-        self.layer_num = layer_num
+        self.hidden_layer_num = hidden_layer_num
         self.neuron_num = neuron_num
-        self.outNum = outNum
+        self.out_num = out_num
         self.yita = yita
         self.lam = lam
         self.iter_num = iter_num
@@ -27,25 +40,32 @@ class BpnnTrain(object):
         self.p = self.X.shape[1] # 样本维度
     
     def layer_func(self):
+        if self.hidden_layer_num < 2: 
+            raise ValueError("hidden_layer_num must >= 2")
+        if not isinstance(self.hidden_layer_num, int): 
+            raise ValueError("hidden_layer_num must as Int")
+        if not isinstance(self.neuron_num, int): 
+            raise ValueError("neuron_num must as Int")
+        if not isinstance(self.out_num, int): 
+            raise ValueError("out_num must as Int")
         w_res = []; b_res = [] # 初始化w, b
         # 计算第一层w,b初始值
-        w_begin = np.random.normal(0, 0.01, self.p*self.neuron_num).reshape(self.p,self.neuron_num)
+        w_begin = np.random.normal(0, 0.01, self.p*self.neuron_num).reshape(self.p, self.neuron_num)
         w_res.append(w_begin)
         b_begin = np.zeros((1, self.neuron_num))
         b_res.append(b_begin)
         # 计算中间层w,b初始值
-        inter_num = self.layer_num-2 # 计算中间层个数
-        for i in range(inter_num):
+        for i in range(self.hidden_layer_num-1): # 隐层个数(>=2)
             w_inter = np.random.normal(0, 0.01, self.neuron_num*self.neuron_num).\
-            reshape(self.neuron_num,self.neuron_num)
+            reshape(self.neuron_num, self.neuron_num)
             b_inter = np.zeros((1, self.neuron_num))
             w_res.append(w_inter)
             b_res.append(b_inter)
             # 计算最后一层w,b初始值
-        w_end = np.random.normal(0, 0.01, self.neuron_num*self.outNum).\
-        reshape(self.neuron_num,self.outNum)
+        w_end = np.random.normal(0, 0.01, self.neuron_num*self.out_num).\
+        reshape(self.neuron_num, self.out_num)
         w_res.append(w_end)
-        b_end = np.zeros((1, self.outNum))
+        b_end = np.zeros((1, self.out_num))
         b_res.append(b_end)
         return w_res, b_res
     
@@ -88,7 +108,7 @@ class BpnnTrain(object):
             w[i] -= self.yita*unit_vec(dw[i])
             b[i] -= self.yita*unit_vec(db[i])
         return w, b
-
+    
     def iter_func(self):
         w, b = self.layer_func()
         lossFunc_res = []
@@ -103,7 +123,7 @@ class BpnnTrain(object):
             w, b = self.grad_descent(dw, db, w, b)
         return w, b, lossFunc_res
     
-obj_train = BpnnTrain(X=X_train, y=y_train, layer_num=4, neuron_num=60, outNum=10, yita=0.001, lam=0.001, iter_num=10000)
+obj_train = BpnnTrain(X=X_train, y=y_train, hidden_layer_num=2, neuron_num=60, out_num=10, yita=0.001, lam=0.001, iter_num=10000)
 w, b, lossFunc_res = obj_train.iter_func()
 plt.plot(lossFunc_res)
 min(lossFunc_res)
@@ -124,4 +144,7 @@ class BpnnTest(BpnnTrain):
 
 obj_test = BpnnTest(w, b, X_test, y_test)
 y_hat, accu = obj_test.test_func()
+print(accu)
 
+for i in range(3):
+    print(i)
