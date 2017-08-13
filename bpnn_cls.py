@@ -145,6 +145,3 @@ class BpnnTest(BpnnTrain):
 obj_test = BpnnTest(w, b, X_test, y_test)
 y_hat, accu = obj_test.test_func()
 print(accu)
-
-for i in range(3):
-    print(i)
