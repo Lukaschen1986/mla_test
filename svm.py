@@ -48,7 +48,16 @@ def find_bounds(y, i, j):
         H = min(C, C - a[i] + a[j])
     return L, H
         
-np.arange(0,n)
+def clip(a, L, H):
+    if a > H:
+        a = H
+    elif a < L:
+        a = L
+    else:
+        a = a
+    return a
+
+tol = 0.001
 
 def train():
     iters = 0
@@ -66,6 +75,37 @@ def train():
         L, H = find_bounds(y, i, j)
         
         # Error for current examples
-        y_hat = a[i]*y[i]*X[i].dot(X.T) + b
+        Ki = (1 + 0.001*X.dot(X[i].T))**2
+        y_hat_i = (a*y).T.dot(Ki) + b
+        Kj = (1 + 0.001*X.dot(X[j].T))**2        
+        y_hat_j = (a*y).T.dot(Kj) + b
+        Ei = y_hat_i - y[i]
+        Ej = y_hat_j - y[j]    
+        
+        # Save old alphas
+        ai_old, aj_old = a[i], a[j]
+        
+        # Update alpha
+        a[j] = aj_old + y[j]*(Ei-Ej)/eta
+        a[j] = clip(a[j], L, H)
+        a[i] = ai_old + y[j]/y[i]*(aj_old-a[j])
+        
+        # Find intercept
+        b1 = b - y[i] + y_hat_i - y[i]*(a[i]-ai_old)*K[i,i] - y[j]*(a[j]-aj_old)*K[i,j]
+        b2 = b - y[j] + y_hat_j - y[i]*(a[i]-ai_old)*K[i,j] - y[j]*(a[j]-aj_old)*K[j,j]
+        if 0 < a[i] < C:
+            b = b1
+        elif 0 < a[j] < C:
+            b = b2
+        else:
+            b = 0.5 * (b1 + b2)
+        
+        # Check convergence
+        diff = np.sqrt(np.sum((a-a_prev)**2))
+        if diff < tol:
+            break
+        
+    # Save support vectors index
+    sv_idx = np.where(a > 0)[0]
 
-np.random.randint(0,n-1)
+        
