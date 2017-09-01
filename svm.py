@@ -114,3 +114,14 @@ tol = 0.001
             diff = np.sqrt(np.sum((a-a_prev)**2))
             if diff < tol:
                 break
+
+    b1 = b - y[i] + ui - y[i]*(a[i]-ai_old)*K[i,i] - y[j]*(a[j]-aj_old)*K[i,j]
+    b2 = b - y[j] + uj - y[i]*(a[i]-ai_old)*K[i,j] - y[j]*(a[j]-aj_old)*K[j,j]
+    
+    # Save support vectors index
+    sv_idx = np.where(a > 0)[0]
+    len(np.where(a > 0)[0])
+    K = poly_kernel(X, X, 1, 0.001, 2)
+    y_hat = (a*y).T.dot(K) + b
+    y_pred = np.sign(y_hat[0])[:,np.newaxis]
+    sum(y == y_pred)/len(y)
