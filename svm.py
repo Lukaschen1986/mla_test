@@ -1,9 +1,68 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Aug 31 11:32:36 2017
+from __future__ import division
+import os
+os.getcwd()
+import numpy as np
+#np.set_printoptions(precision=4)
+import pandas as pd
+import random as rd
+import scipy.spatial.distance as dist
+import copy
+#from sklearn import preprocessing
+#from sklearn import datasets
 
-@author: c00370249
-"""
+df = pd.read_csv("swiss.csv")
+
+X = np.array(df.iloc[:,0:5])
+y = np.array(df.iloc[:,5])
+y = y[:,np.newaxis]
+n, p = X.shape[0], X.shape[1]
+
+a_change = 0
+for i in range(n):
+    # i = 0
+    y_hat = a[i]*y[i]*X[i].dot(X[i]) + b
+    Ei = y_hat - y[i]
+    # 违反KKT
+    if y[i]*y_hat > 1 and a[i] > 0 or y[i]*y_hat < 1 and a[i] < C:
+        
+        
+
+def random_idx(n, j):
+    i = j
+    while i == j:
+        i = np.random.randint(0,n)
+    return i
+
+
+poly_kernel = lambda X_train, X_test, sita, gamma, d: (sita + gamma*X_train.dot(X_test.T))**d
+rbf_kernel = lambda X_train, X_test, gamma: np.exp(-gamma * dist.cdist(X_train, X_train)**2)
+
+K_ploy = poly_kernel(X, X, 1, 0.001, 2)
+K_rbf = rbf_kernel(X, X, 0.0001)
+#np.atleast_2d(x)
+#.flatten()
+
+def find_bounds(y, i, j):
+    if y[i] == y[j]:
+        L = max(0, a[i] + a[j] - C)
+        H = min(a[i] + a[j], C)
+    else:
+        L = max(0, a[j] - a[i])
+        H = min(C, C - a[i] + a[j])
+    return L, H
+        
+def clip(a, L, H):
+    if a > H:
+        a = H
+    elif a < L:
+        a = L
+    else:
+        a = a
+    return a
+
+
+
 
 a = np.zeros((n,1))
 b = 0
