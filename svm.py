@@ -17,17 +17,17 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 
 class SvmTrain(object):
-    def __init__(self, X, y, C, max_iters, tol, kernel, sita, gamma, degree):
+    def __init__(self, X, y, C, max_iters, tol, kernel, seta, gamma, degree):
         self.X = X
         self.y = y
         self.C = C
         self.max_iters = max_iters
         self.tol = tol
         self.n = len(self.X)
-        self.sita = sita
+        self.kernel = kernel
+        self.seta = seta
         self.gamma = gamma
         self.degree = degree
-        self.kernel = kernel
         
     def random_idx(self, i):
         j = i
@@ -44,7 +44,7 @@ class SvmTrain(object):
             H = min(self.C, self.C + a[j] - a[j])
         return L, H
     
-    def clip(a, L, H):
+    def clip(self, a, L, H):
         if a > H:
             a = H
         elif a < L:
@@ -53,12 +53,12 @@ class SvmTrain(object):
             a = a
         return a
     
-    def linear_kernel(X1, X2):
+    def linear_kernel(self, X1, X2):
         res = X1.dot(X2.T)
         return res
     
     def poly_kernel(self, X1, X2):
-        res = (self.sita + self.gamma*X1.dot(X2.T))**self.degree
+        res = (self.seta + self.gamma*X1.dot(X2.T))**self.degree
         return res
     
     def rbf_kernel(self, X1, X2):
@@ -68,22 +68,25 @@ class SvmTrain(object):
         return res
     
     def train(self):
-        iters = 0
-        a = np.zeros((self.n, 1))
-        b = 0
-        
         if self.kernel == "linear":
             K = self.linear_kernel(self.X, self.X)
             kernel_func = self.linear_kernel
         elif self.kernel == "poly":
+            assert isinstance(self.seta, int) and self.seta >= 0, "seta should be given as int and >= 0"
+            assert isinstance(self.gamma, float) and self.gamma > 0, "gamma should be given as float and > 0"
+            assert isinstance(self.degree, int) and self.degree >= 2, "degree should be given as int and >= 2"
             K = self.poly_kernel(self.X, self.X)
             kernel_func = self.poly_kernel
         elif self.kernel == "rbf":
+            assert isinstance(self.gamma, float) and self.gamma > 0, "gamma should be given as float and > 0"
             K = self.rbf_kernel(self.X, self.X)
             kernel_func = self.rbf_kernel
         else:
             raise ValueError("kernel should be linear, poly or rbf")
         
+        iters = 0
+        a = np.zeros((1, self.n))[0]
+        b = 0
         while iters < self.max_iters:
             iters += 1
             a_prev = copy.deepcopy(a)
@@ -125,9 +128,9 @@ class SvmTrain(object):
             if diff < self.tol:
                 break
             return a, b
-                
-obj = SvmTrain(X_train, y_train, C=0.6, max_iters=400, tol=0.001, kernel="poly", sita=1, gamma=0.01, degree=2)
-obj.train()     
-      
-        
-        
+
+obj = SvmTrain(X_train, y_train, C=0.6, max_iters=400, tol=0.001, kernel="linear", seta=None, gamma=None, degree=None)
+obj = SvmTrain(X_train, y_train, C=0.6, max_iters=400, tol=0.001, kernel="poly", seta=1, gamma=0.01, degree=2)
+obj = SvmTrain(X_train, y_train, C=0.6, max_iters=400, tol=0.001, kernel="rbf", seta=None, gamma=0.01, degree=None)
+obj.train()
+
