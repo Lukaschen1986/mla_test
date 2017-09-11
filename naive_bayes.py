@@ -19,27 +19,24 @@ df_train, df_predict = train_test_split(df, test_size=0.1)
 df_train.index = range(len(df_train))
 df_predict.index = range(len(df_predict))
 
-# y = "no"
 def prior_prob(df_train, y_train, y_label):
     count = df_train[y_train].value_counts()[y_label]
     res = count/len(df_train)
     return res
 
-
+# y_train = "buys_computer"; y_label = "1"
 def condi_prob(df_train, y_train, y_label, df_predict):
     df_sub = df_train[df_train[y_train] == y_label]
     n = len(df_predict); m = len(df_train.columns)-1
-    prob = np.zeros((n,1))
+    probs = np.ones((n,1))
     for i in range(n):
         for j in range(m):
             if isinstance(df_predict.iloc[i,j], str):
-                prob[i] += np.log((np.sum(df_predict.iloc[i,j] == df_sub.iloc[:,j])+1)/(len(df_sub)+m))
+                probs[i] *= (np.sum(df_predict.iloc[i,j] == df_sub.iloc[:,j])+1)/(len(df_sub)+m)
             else:
-                prob[i] += np.log(stats.norm.pdf(df_predict.iloc[i,j],np.mean(df_sub.iloc[:,j]),np.std(df_sub.iloc[:,j])))
-    probs = np.exp(prob)
+                probs[i] *= stats.norm.pdf(df_predict.iloc[i,j],np.mean(df_sub.iloc[:,j]),np.std(df_sub.iloc[:,j]))
     return probs
    
-
 #def margin_prob(df_train, df_predict):
 #    n = len(df_predict); m = len(df_train.columns)-1
 #    prob = np.zeros((n,1))
@@ -63,5 +60,3 @@ def predict_func(df_train, y_train, y_label_set, df_predict):
     pred_sca = pred/np.sum(pred, axis=1, keepdims=True)
     y_hat = np.argmax(pred_sca, axis=1)
     return y_hat
-    
-
