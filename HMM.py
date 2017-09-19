@@ -2,100 +2,57 @@
 import numpy as np
 import pandas as pd
 
-A = pd.DataFrame({"sunny": [0.5,0.25,0.25],
-                  "cloudy": [0.375,0.125,0.375],
-                  "rainy": [0.125,0.25,0.5]}, index=["cloudy","rainy","sunny"])
-
-B = pd.DataFrame({"dry": [0.6,0.25,0.05],
-                  "dryish": [0.2,0.25,0.1],
-                  "damp": [0.15,0.25,0.35],
-                  "soggy": [0.05,0.25,0.5]}, index=["cloudy","rainy","sunny"])
-
-pi = pd.DataFrame({"sunny":[0.6], "cloudy":[0.2], "rainy":[0.2]})
-
-obs = ('dry','dryish','damp','soggy')
-
-n = len(A)
-t = len(obs)
-
-# 1
-x1 = pi.dot(A)
-
-full_prob = 0.0
-for i in range(n):
-    full_prob += B.loc[x1.columns[i], obs[0]]*x1.iloc[:,i]
-
-update = np.zeros((1,n))
-for j in range(n):
-    update[0,j] = B.loc[x1.columns[j], obs[0]]*x1.iloc[:,j] / full_prob
-update = pd.DataFrame(update, columns=A.columns)
-
-
-# 2
-predict = update.dot(A)
-
-full_prob = 0.0
-for i in range(n):
-    full_prob += B.loc[predict.columns[i], obs[1]]*predict.iloc[:,i]
-update = np.zeros((1,n))
-for j in range(n):
-    update[0,j] = B.loc[predict.columns[j], obs[1]]*predict.iloc[:,j] / full_prob
-update = pd.DataFrame(update, columns=A.columns)
-
-# 3
-predict = update.dot(A)
-
-full_prob = 0.0
-for i in range(n):
-    full_prob += B.loc[predict.columns[i], obs[2]]*predict.iloc[:,i]
-update = np.zeros((1,n))
-for j in range(n):
-    update[0,j] = B.loc[predict.columns[j], obs[2]]*predict.iloc[:,j] / full_prob
-update = pd.DataFrame(update, columns=A.columns)
-
-# 4
-predict = update.dot(A)
-
-full_prob = 0.0
-for i in range(n):
-    full_prob += B.loc[predict.columns[i], obs[3]]*predict.iloc[:,i]
-update = np.zeros((1,n))
-for j in range(n):
-    update[0,j] = B.loc[predict.columns[j], obs[3]]*predict.iloc[:,j] / full_prob
-update = pd.DataFrame(update, columns=A.columns)
-
-# 5
-predict = update.dot(A)
-np.argmax(np.array(predict), axis=1)
-predict.columns[np.argmax(np.array(predict))]
-
------------------------
-
 df = pd.read_csv("seatbelts.csv")
 idx = np.random.permutation(df.index)
 df = pd.DataFrame(df, index=idx)
 df.index = range(len(df))
 
-df = df[0:20]
+#x_name = "price"; y_name = "kill"
+def data_define(df, x_name, y_name):
+    # define x y
+    x, y = df[x_name], df[y_name]
+    # define transition matrix
+    A_name = set(x); A_shape = len(A_name)
+    A = pd.DataFrame(np.zeros((A_shape, A_shape)), index=A_name, columns=A_name)
+    for i in range(len(df)-1):
+        j = i + 1
+        A.loc[x[i], x[j]] += 1
+    A_sum = A.apply(np.sum, axis=1)
+    for j in range(len(A)):
+        A.iloc[j,:] = A.iloc[j,:] / A_sum[j]
+    # define emission matrix
+    B_name = set(y); B_shape = len(B_name)
+    B = pd.DataFrame(np.zeros((A_shape, B_shape)), index=A_name, columns=B_name)
+    for i in range(len(df)):
+        B.loc[x[i], y[i]] += 1
+    B_sum = B.apply(np.sum, axis=1)
+    for j in range(len(B)):
+        B.iloc[j,:] = B.iloc[j,:] / B_sum[j]
+    return A, B
+A, B = data_define(df, "price", "kill")
+    
+x0 = pd.DataFrame({"[0.0941,0.107)":[0.5], "[0.12,0.133]":[0.2], "[0.0811,0.0941)":[0.2], "[0.107,0.12)":[0.1]})
+
+obs = df["kill"][1:101]
+
+def HMM(A, B, x0, obs):
+    update = x0
+    n, t = len(A), len(obs)
+    for step in range(t):
+        # predict
+        predict = update.dot(A)
+        # update
+        full_prob = 0.0
+        for i in range(n):
+            full_prob += B.loc[predict.columns[i], obs.iloc[step]]*predict.iloc[:,i]
+        update = np.zeros((1,n))
+        for j in range(n):
+            update[0,j] = B.loc[predict.columns[j], obs.iloc[step]]*predict.iloc[:,j] / full_prob
+        update = pd.DataFrame(update, columns=A.columns)
+    predict = update.dot(A)
+    max_label = predict.columns[np.argmax(np.array(predict))]
+    max_value = np.max(np.array(predict))
+    return predict, max_label, max_value
+predict, max_label, max_value = HMM(A, B, x0, obs)
 
 
-x = df["price"]
-A_name = set(x)
-A_shape = len(A_name)
-A = pd.DataFrame(np.zeros((A_shape, A_shape)), index=A_name, columns=A_name)
-
-for i in range(len(x)-1):
-    for j in range(1,len(x)):
-#        i = 9; j = 10
-        A.loc[x[i], x[j]] = A.loc[x[i], x[j]] + 1
-
-A_sum = A.apply(np.sum, axis=1)
-for j in range(len(A)):
-    A.iloc[j,:] = A.iloc[j,:] / A_sum[j]
-
-----------------------------------------------
-df <- data.frame(Seatbelts[,c("DriversKilled","PetrolPrice")])
-kill <- cut(df$DriversKilled, breaks = 5, right = F, include.lowest = T)
-price <- cut(df$PetrolPrice, breaks = 4, right = F, include.lowest = T)
-df <- data.frame(kill = kill, price = price)
-write.csv(df, "D:/my_project/Python_Project/test/HMM/seatbelts.csv", row.names = F)
