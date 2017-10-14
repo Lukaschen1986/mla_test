@@ -153,7 +153,7 @@ class BpnnTrain(object):
 #        else:
 #            ValueError("active_out must in ('sigmoid','softmax')")
         for i in range(len(w)):
-            loss += self.lam/2*np.sum(w[i]**2)
+            loss += self.lam/(2*n) * np.sum(w[i]**2)
         return loss
     
     def backward_func(self, X, y, a, z, a_end, w):
@@ -180,7 +180,7 @@ class BpnnTrain(object):
             ValueError("active_in must in (tanh, relu, leaky_relu)")
         # 逐层求导，注意是倒序    
         for i in range(len(w))[::-1]:
-            dw = a[i].T.dot(delta) + self.lam*w[i]
+            dw = a[i].T.dot(delta) + self.lam*w[i]/n
             db = np.sum(delta, axis=0, keepdims=True)
             dw_res.append(dw)
             db_res.append(db)
