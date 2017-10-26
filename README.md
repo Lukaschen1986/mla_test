@@ -1,3 +1,6 @@
 # mla_test
 ## bayesian_networks.py
-![算法推导](https://github.com/Lukaschen1986/mla_test/master/pic/1.png) 
+![算法推导](https://github.com/Lukaschen1986/mla_test/raw/master/pic/1.png) 
+
+
+https://github.com/用户名/repository仓库名/raw/分支名master/图片文件夹名称/***.png or***.jpg
