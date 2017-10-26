@@ -20,11 +20,12 @@ target = digits.target
 #    idx_test = [i for i in range(len(data)) if i not in idx_train]
 #    return idx_train, idx_test
 
-X_0, X_predict_0, y, y_predict = train_test_split(data, target, test_size=0.4)
-
 # scale
+X_0, X_predict_0, y, y_predict = train_test_split(data, target, test_size=0.4)
 X = (X_0-np.mean(X_0, axis=0, keepdims=True)) / (np.std(X_0, axis=0, keepdims=True)+10**-8)
 X_predict = (X_predict_0-np.mean(X_0, axis=0, keepdims=True)) / (np.std(X_0, axis=0, keepdims=True)+10**-8)
+
+#X, X_predict, y, y_predict = train_test_split(data, target, test_size=0.4)
 
 # active_func
 def sigmiod(z):
@@ -67,6 +68,23 @@ def drop_out(a, keep_prob):
     a /= keep_prob
     return a
 
+# Adam
+def Adam(w, b, dw, db, v_dw, v_db, s_dw, s_db, beta_1, beta_2, alpha, eps, i):
+    # v & s
+    v_dw = beta_1*v_dw + (1-beta_1)*dw
+    v_db = beta_1*v_db + (1-beta_1)*db
+    s_dw = beta_2*s_dw + (1-beta_2)*(dw**2)
+    s_db = beta_2*s_db + (1-beta_2)*(db**2)
+    # corr
+    v_dw_corr = v_dw/(1-beta_1**i)
+    v_db_corr = v_db/(1-beta_1**i)
+    s_dw_corr = s_dw/(1-beta_2**i)
+    s_db_corr = s_db/(1-beta_2**i)
+    # gradient_decent
+    w -= alpha*v_dw_corr/(np.sqrt(s_dw_corr)+eps)
+    b -= alpha*v_db_corr/(np.sqrt(s_db_corr)+eps)
+    return w, b, v_dw_corr, v_db_corr, s_dw_corr, s_db_corr
+
 
 x = len(X)
 p = X.shape[1]
@@ -87,18 +105,32 @@ b2 = np.zeros((1, hideNum_2))
 b3 = np.zeros((1, hideNum_3))
 b4 = np.zeros((1, outNum))
 
-Cost = 0.0
-Cost_list = []
-epochs = 10000
-lam = 0.001
+v_dw1 = s_dw1 = np.zeros((w1.shape))
+v_dw2 = s_dw2 = np.zeros((w2.shape))
+v_dw3 = s_dw3 = np.zeros((w3.shape))
+v_dw4 = s_dw4 = np.zeros((w4.shape))
+v_db1 = s_db1 = np.zeros((b1.shape))
+v_db2 = s_db2 = np.zeros((b2.shape))
+v_db3 = s_db3 = np.zeros((b3.shape))
+v_db4 = s_db4 = np.zeros((b4.shape))
 
-batchs = 3
+
+epochs = 1000
+lam = 0.001
+alpha = 0.01
+beta_1 = 0.9
+beta_2 = 0.999
+eps = 10**-8
+
+batchs = 1
 batch_idx = np.tile(range(batchs), int(np.ceil(len(X)/batchs)))[0:len(X)]
 df = pd.DataFrame(np.concatenate((X, y[:,np.newaxis]), axis=1), index=batch_idx)
 active = tanh
 active_dv = tanh_dv
+Cost_list = []
 
-for i in range(epochs):
+for i in range(1, epochs+1):
+    Cost = 0.0
     for j in range(batchs):
         # j = 0
         X_batch = np.array(df[df.index == j])[:,0:-1]
@@ -137,18 +169,30 @@ for i in range(epochs):
         delta1 = delta2.dot(w2.T) * active_dv(z1)
         dw1 = X_batch.T.dot(delta1) + lam/n_batch*w1
         db1 = np.sum(delta1, axis=0, keepdims=True)
-        
-        
+        # Adam
+        w4, b4, v_dw4, v_db4, s_dw4, s_db4 = Adam(w4,b4,dw4,db4,v_dw4,v_db4,s_dw4,s_db4,beta_1,beta_2,alpha,eps,i)
+        w3, b3, v_dw3, v_db3, s_dw3, s_db3 = Adam(w3,b3,dw3,db3,v_dw3,v_db3,s_dw3,s_db3,beta_1,beta_2,alpha,eps,i)
+        w2, b2, v_dw2, v_db2, s_dw2, s_db2 = Adam(w2,b2,dw2,db2,v_dw2,v_db2,s_dw2,s_db2,beta_1,beta_2,alpha,eps,i)
+        w1, b1, v_dw1, v_db1, s_dw1, s_db1 = Adam(w1,b1,dw1,db1,v_dw1,v_db1,s_dw1,s_db1,beta_1,beta_2,alpha,eps,i)
+#        w4 -= alpha*dw4
+#        b4 -= alpha*db4
+#        w3 -= alpha*dw3
+#        b3 -= alpha*db3
+#        w2 -= alpha*dw2
+#        b2 -= alpha*db2
+#        w1 -= alpha*dw1
+#        b1 -= alpha*db1
+    # update_alpha
+    alpha *= 0.95**i
+    # Cost
     Cost /= batchs
     Cost_list.append(Cost)
-    if Cost_list[i] > Cost_list[i-1]:
-        break
+    plt.plot(Cost_list)
     # 判定完随即储存当前最优参数
     parameter = {"w1":w1, "b1":b1,
                  "w2":w2, "b2":b2,
                  "w3":w3, "b3":b3,
                  "w4":w4, "b4":b4}
-    # 反向逐层求导
-    delta4 = output
-        
+    if Cost_list[i] > Cost_list[i-1]:
+        break
 
