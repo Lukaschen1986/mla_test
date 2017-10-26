@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# http://scikit-learn.org/stable/modules/neural_networks_supervised.html
 from __future__ import division
 import os
 os.getcwd()
@@ -8,132 +7,148 @@ import pandas as pd
 import random as rd
 from sklearn import datasets
 from sklearn import linear_model
+from sklearn.cross_validation import train_test_split
 from sklearn.neural_network import MLPClassifier
 import matplotlib.pyplot as plt
 
 digits = datasets.load_digits()
-X = digits.data
-y = digits.target
+data = digits.data
+target = digits.target
 
-def data_split(data, prob):
-    idx_train = rd.sample(range(len(data)), int(len(data)*prob))
-    idx_test = [i for i in range(len(data)) if i not in idx_train]
-    return idx_train, idx_test
+#def data_split(data, prob):
+#    idx_train = rd.sample(range(len(data)), int(len(data)*prob))
+#    idx_test = [i for i in range(len(data)) if i not in idx_train]
+#    return idx_train, idx_test
 
-idx_train, idx_test = data_split(X, 0.7)
-X_train = X[idx_train]
-y_train = y[idx_train]
-X_test = X[idx_test]
-y_test = y[idx_test]
+X_0, X_predict_0, y, y_predict = train_test_split(data, target, test_size=0.4)
 
-def bpnn_train(X, y, hideNum_1=70, hideNum_2=60, hideNum_3=50, yita=0.001, lam=0.001, iterNum=10000):
-    unit_vec = lambda x: x/np.sqrt(np.sum(x**2))
-    # 定义超参
-    n = len(X) # 样本个数
-    p = X.shape[1] # 样本维度
-    hideNum_1 = hideNum_1 # 隐藏神经元个数
-    hideNum_2 = hideNum_2
-    hideNum_3 = hideNum_3
-    outNum = len(set(y)) # 输出层维度，等于y的水平个数
-    yita = yita # 学习率
-    lam = lam # 正则系数
-    # 定义参数初始值
-    np.random.seed(0)
-#    w1 = np.random.randn(p, hideNum) / np.sqrt(p)
-#    w2 = np.random.randn(hideNum, hideNum) / np.sqrt(hideNum)
-#    w3 = np.random.randn(hideNum, outNum) / np.sqrt(hideNum)
-    w1 = np.random.normal(0, 0.01, p*hideNum_1).reshape(p,hideNum_1)
-    w2 = np.random.normal(0, 0.01, hideNum_1*hideNum_2).reshape(hideNum_1,hideNum_2)
-    w3 = np.random.normal(0, 0.01, hideNum_2*hideNum_3).reshape(hideNum_2,hideNum_3)
-    w4 = np.random.normal(0, 0.01, hideNum_3*outNum).reshape(hideNum_3,outNum)
-    b1 = np.zeros((1, hideNum_1))
-    b2 = np.zeros((1, hideNum_2))
-    b3 = np.zeros((1, hideNum_3))
-    b4 = np.zeros((1, outNum))
-    lossFunc_res = []
-    # 循环训练
-    for i in range(iterNum):
+# scale
+X = (X_0-np.mean(X_0, axis=0, keepdims=True)) / (np.std(X_0, axis=0, keepdims=True)+10**-8)
+X_predict = (X_predict_0-np.mean(X_0, axis=0, keepdims=True)) / (np.std(X_0, axis=0, keepdims=True)+10**-8)
+
+# active_func
+def sigmiod(z):
+    res = 1.0 / (1.0 + np.exp(-z))
+    return res
+    
+def tanh(z):
+    res = 2.0 / (1.0 + np.exp(-z)) - 1
+    return res
+    
+def relu(z):
+    res = np.maximum(0, z)
+    return res
+    
+def leaky_relu(z):
+    res = np.maximum(0.01*z, z)
+    return res
+    
+def softmax(z):
+    res = np.exp(z) / np.sum(np.exp(z), axis=1, keepdims=True)
+    return res
+    
+def tanh_dv(z):
+    res = 1-(np.tanh(z))**2
+    return res
+    
+def relu_dv(z):
+    res = np.where(z < 0, 0, 1)
+    return res
+    
+def leaky_relu_dv(z):
+    res = np.where(z < 0, 0.01, 1)
+    return res
+
+# drop_out
+keep_prob = 0.8
+def drop_out(a, keep_prob):
+    d = np.random.rand(a.shape[0], a.shape[1]) < keep_prob
+    a *= d
+    a /= keep_prob
+    return a
+
+
+x = len(X)
+p = X.shape[1]
+
+hideNum_1 = 70
+hideNum_2 = 70
+hideNum_3 = 60
+outNum = len(set(y))
+
+param = 1.0 # 1.0 for tanh; 2.0 for relu
+
+w1 = np.random.randn(p, hideNum_1) * np.sqrt(param/p)
+w2 = np.random.randn(hideNum_1, hideNum_2) * np.sqrt(param/hideNum_1)
+w3 = np.random.randn(hideNum_2, hideNum_3) * np.sqrt(param/hideNum_2)
+w4 = np.random.randn(hideNum_3, outNum) * np.sqrt(param/hideNum_3)
+b1 = np.zeros((1, hideNum_1))
+b2 = np.zeros((1, hideNum_2))
+b3 = np.zeros((1, hideNum_3))
+b4 = np.zeros((1, outNum))
+
+Cost = 0.0
+Cost_list = []
+epochs = 10000
+lam = 0.001
+
+batchs = 3
+batch_idx = np.tile(range(batchs), int(np.ceil(len(X)/batchs)))[0:len(X)]
+df = pd.DataFrame(np.concatenate((X, y[:,np.newaxis]), axis=1), index=batch_idx)
+active = tanh
+active_dv = tanh_dv
+
+for i in range(epochs):
+    for j in range(batchs):
+        # j = 0
+        X_batch = np.array(df[df.index == j])[:,0:-1]
+        y_batch = np.array(df[df.index == j])[:,-1].astype(int)
+        n_batch = len(X_batch)
         # 计算各输出
-        z1 = X.dot(w1) + b1
-        a1 = np.tanh(z1)
+        z1 = X_batch.dot(w1) + b1
+        a1 = active(z1)
+#        a1 = drop_out(a1, keep_prob)
         z2 = a1.dot(w2) + b2
-        a2 = np.tanh(z2)
+        a2 = active(z2)
+#        a2 = drop_out(a2, keep_prob)
         z3 = a2.dot(w3) + b3
-        a3 = np.tanh(z3)
+        a3 = active(z3)
+#        a3 = drop_out(a3, keep_prob)
         z4 = a3.dot(w4) + b4
-        a4 = np.exp(z4)
-        prob = a4/np.sum(a4, axis=1, keepdims=True)
+        output = softmax(z4)
         # 计算损失函数值，并判定是否跳出循环
-        lossFunc = -np.sum(np.log(prob[range(n), y]))/n
-        lossFunc += lam/2*np.sum(w1**2) + lam/2*np.sum(w2**2) + lam/2*np.sum(w3**2) + lam/2*np.sum(w4**2)
-        lossFunc_res.append(lossFunc)
-        if lossFunc_res[i] > lossFunc_res[i-1]: break
-        # 判定完随即储存当前最优参数
-        parameter = {"w1":w1, "b1":b1,
-                     "w2":w2, "b2":b2,
-                     "w3":w3, "b3":b3,
-                     "w4":w4, "b4":b4}
+        Loss = -np.sum(np.log(output[range(n_batch), y_batch]))/n_batch
+        Loss += lam/(2*n_batch)*np.sum(w1**2) + lam/(2*n_batch)*np.sum(w2**2) + lam/(2*n_batch)*np.sum(w3**2) + lam/(2*n_batch)*np.sum(w4**2)
+        Cost += Loss
         # 反向逐层求导
-        delta4 = prob
-        delta4[range(n), y] -= 1
-        dw4 = a3.T.dot(delta4) + lam*w4
+        delta4 = output
+        delta4[range(n_batch), y_batch] -= 1
+        dw4 = a3.T.dot(delta4) + lam/n_batch*w4
         db4 = np.sum(delta4, axis=0, keepdims=True)
-                
-        delta3 = delta4.dot(w4.T) * (1-a3**2)
-        dw3 = a2.T.dot(delta3) + lam*w3
+        
+        delta3 = delta4.dot(w4.T) * active_dv(z3)
+        dw3 = a2.T.dot(delta3) + lam/n_batch*w3
         db3 = np.sum(delta3, axis=0, keepdims=True)
         
-        delta2 = delta3.dot(w3.T) * (1-a2**2)
-        dw2 = a1.T.dot(delta2) + lam*w2
+        delta2 = delta3.dot(w3.T) * active_dv(z2)
+        dw2 = a1.T.dot(delta2) + lam/n_batch*w2
         db2 = np.sum(delta2, axis=0, keepdims=True)
         
-        delta1 = delta2.dot(w2.T) * (1-a1**2)
-        dw1 = X.T.dot(delta1) + lam*w1
+        delta1 = delta2.dot(w2.T) * active_dv(z1)
+        dw1 = X_batch.T.dot(delta1) + lam/n_batch*w1
         db1 = np.sum(delta1, axis=0, keepdims=True)
-        # 梯度下降
-        w4 -= yita*unit_vec(dw4)
-        b4 -= yita*unit_vec(db4)
-        w3 -= yita*unit_vec(dw3)
-        b3 -= yita*unit_vec(db3)
-        w2 -= yita*unit_vec(dw2)
-        b2 -= yita*unit_vec(db2)
-        w1 -= yita*unit_vec(dw1)
-        b1 -= yita*unit_vec(db1)
-    return parameter, lossFunc_res
+        
+        
+    Cost /= batchs
+    Cost_list.append(Cost)
+    if Cost_list[i] > Cost_list[i-1]:
+        break
+    # 判定完随即储存当前最优参数
+    parameter = {"w1":w1, "b1":b1,
+                 "w2":w2, "b2":b2,
+                 "w3":w3, "b3":b3,
+                 "w4":w4, "b4":b4}
+    # 反向逐层求导
+    delta4 = output
+        
 
-parameter, lossFunc_res = bpnn_train(X_train, y_train, \
-                                     hideNum_1=70, hideNum_2=70, hideNum_3=70, \
-                                     yita=0.001, lam=0.001, iterNum=10000)
-plt.plot(lossFunc_res); min(lossFunc_res); np.argmin(lossFunc_res)
-
-def bpnn_predict(parameter, X, y):
-    w1 = parameter["w1"]; b1 = parameter["b1"]
-    w2 = parameter["w2"]; b2 = parameter["b2"]
-    w3 = parameter["w3"]; b3 = parameter["b3"]
-    w4 = parameter["w4"]; b4 = parameter["b4"]
-    z1 = X.dot(w1) + b1
-    a1 = np.tanh(z1)
-    z2 = a1.dot(w2) + b2
-    a2 = np.tanh(z2)
-    z3 = a2.dot(w3) + b3
-    a3 = np.tanh(z3)
-    z4 = a3.dot(w4) + b4
-    a4 = np.exp(z4)
-    prob = a4/np.sum(a4, axis=1, keepdims=True)
-    y_hat = np.argmax(prob, axis=1)
-    accu = np.sum(y_hat == y)/len(y)
-    return y_hat, accu
-y_hat, accu = bpnn_predict(parameter, X_test, y_test)
-print(accu)
-
-# MLPClassifier
-clf = MLPClassifier(activation="tanh", hidden_layer_sizes=(70,70,70), random_state=1)
-clf.fit(X_train, y_train)
-y_hat_sk = clf.predict(X_test)
-np.sum(y_hat_sk == y_test)/len(y_test)
-
-# LR
-clf = linear_model.LogisticRegressionCV()
-clf.fit(X_train, y_train)
-clf_pred = clf.predict(X_test)
-np.sum(clf_pred == y_test)/len(y_test)
