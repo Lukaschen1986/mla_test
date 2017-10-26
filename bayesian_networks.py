@@ -1,3 +1,5 @@
+![image](https://github.com/Lukaschen1986/mla_test/tree/master/pic/1.png)   
+
 def prior_prob(df_train, y_name, y_label):
     count = df_train[y_name].value_counts()[y_label]
     res = count/len(df_train)
