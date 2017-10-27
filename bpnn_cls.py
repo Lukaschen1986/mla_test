@@ -20,6 +20,17 @@ target = digits.target
 #    idx_test = [i for i in range(len(data)) if i not in idx_train]
 #    return idx_train, idx_test
 
+def zscore(data):
+    assert isinstance(data, np.ndarray), "type of data must be np.ndarray"
+    res = (data-np.mean(data, axis=0, keepdims=True)) / (np.std(data, axis=0, keepdims=True)+10**-8)
+    return res
+
+def BN(data, gamma, eta):
+    assert isinstance(data, np.ndarray), "type of data must be np.ndarray"
+    zscore = (data-np.mean(data, axis=0, keepdims=True)) / (np.std(data, axis=0, keepdims=True)+10**-8)
+    res = gamma*zscore + eta
+    return res
+
 # scale
 eps = 10**-8
 X_0, X_predict_0, y, y_predict = train_test_split(data, target, test_size=0.4)
