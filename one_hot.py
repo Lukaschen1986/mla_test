@@ -36,3 +36,10 @@ df1.join(df2, how="inner")
 
 df["col"].first_valid_index() # 列中第一个不为空的index
 index > df["idx"].first_valid_index()
+
+np.vstack((a,b,c))
+np.column_stack((a,b,c))
+np.trace(a)
+
+import numpy.linalg as nplg
+nplg.eig(a)
