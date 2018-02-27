@@ -1,4 +1,10 @@
+from keras.utils.np_utils import to_categorical
+import pandas as pd
+
+# one_hot
 one_hot = lambda y: np.eye(len(set(y)))[y]
+y_train_oht = to_categorical(y_train)
+df = pd.get_dummies(df, columns=[], drop_first=False, dummy_na=False)
 
 X,Y = ['\u4e00','\u9fa5']
 X
