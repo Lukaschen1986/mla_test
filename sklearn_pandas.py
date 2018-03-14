@@ -38,3 +38,5 @@ mapper = DataFrameMapper(
 # default=False 全部丢弃（默认）
 # default=None 原封不动地保留
 # np.log1p log(x+1)
+
+mapper.fit_transform(testdata)
