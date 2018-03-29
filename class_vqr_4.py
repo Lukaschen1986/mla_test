@@ -9,7 +9,7 @@
         clf = XGBClassifier(
             # General Parameters
             booster="gbtree",
-            silent=0,
+            silent=1,
             nthread=nthread,
             # Booster Parameters
             learning_rate=0.3,
@@ -237,6 +237,7 @@
         time.sleep(60)
         
         # 15-终极训练
+        print("15-终极训练")
         model_res = xgb.train(params=xgb_param,
                               dtrain=d_train,
                               num_boost_round=xgb_param["n_estimators"],
