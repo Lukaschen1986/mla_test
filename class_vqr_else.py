@@ -60,7 +60,7 @@ fig, ax = plt.subplots(figsize=(5,5))
 xgb.plot_importance(model_1, height=0.5, ax=ax)
 
 fig, ax = plt.subplots(figsize=(30,30))
-xgb.plot_tree(model_1, num_trees=0, ax=ax)
+xgb.plot_tree(model_1, fmap="./model_res.fmap", num_trees=0, ax=ax)
 
 fscore = model_1.get_fscore()
 feat_imp = pd.DataFrame({"feat": list(fscore.keys()), "imp": list(fscore.values())})
