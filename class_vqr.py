@@ -241,7 +241,6 @@ class VirtualQuotaRoom(object):
         mapper_fit = mapper.fit(df_train)
         df_train_transform = mapper_fit.transform(df_train)
         df_test_transform = mapper_fit.transform(df_test)
-        
         # 19-特征名称
         df_train_transform_2 = pd.get_dummies(df_train, columns=["orderattribute","ordersource","payway","cityid","hotelstargrade",
                                                                  "contractprice_disperse","guaranstatus","create_late","create_sameday",
