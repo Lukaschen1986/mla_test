@@ -213,20 +213,20 @@ class VirtualQuotaRoom(object):
         mapper = DataFrameMapper(
             features=[
                     (["is_confirm"], None),
-                    (["orderattribute"], None),
+                    (["contractprice"], None),
+                    (["pre_hours"], None),
+                    (["room_nights"], None),
+                    (["orderattribute"], OneHotEncoder()),
                     (["ordersource"], OneHotEncoder()),
                     (["payway"], OneHotEncoder()),
                     (["cityid"], LabelBinarizer()),
                     (["hotelstargrade"], OneHotEncoder()),
-                    (["contractprice"], None),
                     (["contractprice_disperse"], LabelBinarizer()),
-                    (["guaranstatus"], None),
-                    (["create_late"], None),
-                    (["create_sameday"], None),
-                    (["create_twoday"], None),
-                    (["pre_hours"], None),
+                    (["guaranstatus"], OneHotEncoder()),
+                    (["create_late"], OneHotEncoder()),
+                    (["create_sameday"], OneHotEncoder()),
+                    (["create_twoday"], OneHotEncoder()),
                     (["pre_hours_disperse"], LabelBinarizer()),
-                    (["room_nights"], None),
                     (["room_nights_disperse"], LabelBinarizer()),
                     (["create_month"], LabelBinarizer()),
                     (["create_day"], OneHotEncoder()),
@@ -241,9 +241,17 @@ class VirtualQuotaRoom(object):
         mapper_fit = mapper.fit(df_train)
         df_train_transform = mapper_fit.transform(df_train)
         df_test_transform = mapper_fit.transform(df_test)
+        
+        # 19-特征名称
+        df_train_transform_2 = pd.get_dummies(df_train, columns=["orderattribute","ordersource","payway","cityid","hotelstargrade",
+                                                                 "contractprice_disperse","guaranstatus","create_late","create_sameday",
+                                                                 "create_twoday","pre_hours_disperse","room_nights_disperse","create_month",
+                                                                 "create_day","create_hour","create_weekday","checkin_month",
+                                                                 "checkin_day","checkin_weekday"], drop_first=False, dummy_na=False)
+        feat_name = df_train_transform_2.columns[1:]
         t1 = pd.Timestamp.now()
         print("特征工程处理完毕，用时：%s" % (t1-t0))
-        return df_train, df_train_transform, df_test_transform, pre_hours, room_nights, price, mapper_fit
+        return df_train, df_train_transform, df_test_transform, pre_hours, room_nights, price, mapper_fit, feat_name
     
     def data_split(self, df_model_transform):
         x = df_model_transform[:,1:]
@@ -523,20 +531,20 @@ class VirtualQuotaRoom(object):
         # 2-特征变换
         mapper = DataFrameMapper(
             features=[
-                    (["orderattribute"], None),
+                    (["contractprice"], None),
+                    (["pre_hours"], None),
+                    (["room_nights"], None),
+                    (["orderattribute"], OneHotEncoder()),
                     (["ordersource"], OneHotEncoder()),
                     (["payway"], OneHotEncoder()),
                     (["cityid"], LabelBinarizer()),
                     (["hotelstargrade"], OneHotEncoder()),
-                    (["contractprice"], None),
                     (["contractprice_disperse"], LabelBinarizer()),
-                    (["guaranstatus"], None),
-                    (["create_late"], None),
-                    (["create_sameday"], None),
-                    (["create_twoday"], None),
-                    (["pre_hours"], None),
+                    (["guaranstatus"], OneHotEncoder()),
+                    (["create_late"], OneHotEncoder()),
+                    (["create_sameday"], OneHotEncoder()),
+                    (["create_twoday"], OneHotEncoder()),
                     (["pre_hours_disperse"], LabelBinarizer()),
-                    (["room_nights"], None),
                     (["room_nights_disperse"], LabelBinarizer()),
                     (["create_month"], LabelBinarizer()),
                     (["create_day"], OneHotEncoder()),
