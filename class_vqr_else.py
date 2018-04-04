@@ -56,6 +56,13 @@ model_1 = xgb.train(params=xgb_param,
                     early_stopping_rounds=None,
                     verbose_eval=True)
 
+def create_feature_map(fmap_filename, features):
+    outfile = open(fmap_filename, 'w')
+    for i, feat in enumerate(features):
+        outfile.write('{0}\t{1}\tq\n'.format(i, feat))
+    outfile.close()
+create_feature_map('D:/my_project/Python_Project/iTravel/virtual_quota_room/txt/model_res.fmap', feat_name)
+
 fig, ax = plt.subplots(figsize=(5,5))
 xgb.plot_importance(model_1, height=0.5, ax=ax)
 
