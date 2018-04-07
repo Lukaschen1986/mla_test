@@ -314,7 +314,7 @@ class VirtualQuotaRoom(object):
         t0 = pd.Timestamp.now()
         model_3 = clf_gscv.fit(x_train, y_train)
         t1 = pd.Timestamp.now()
-        #model_3.grid_scores_; model_3.best_score_
+        #model_3.grid_scores_; model_3.best_score_; model_3.best_estimator_
         best_param = model_3.best_params_["learning_rate"]
         clf.set_params(learning_rate=best_param)
         xgb_param = clf.get_xgb_params()
