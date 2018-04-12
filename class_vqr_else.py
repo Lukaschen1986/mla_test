@@ -63,6 +63,7 @@ def create_feature_map(fmap_filename, features):
     outfile.close()
 create_feature_map('D:/my_project/Python_Project/iTravel/virtual_quota_room/txt/model_res.fmap', feat_name)
 
+import matplotlib.pyplot as plt
 fig, ax = plt.subplots(figsize=(5,5))
 xgb.plot_importance(model_1, height=0.5, ax=ax)
 
