@@ -36,3 +36,20 @@ sklearn2pmml(pipeline,
              with_repr=True, # 是否打印模型参数到pmml
              debug=False)
              
+# pickle
+f = open(path + "data.txt", "wb")
+pickle.dump(data, f)
+f.close()
+
+f = open(path + "data.txt", "rb")
+data = pickle.load(f)
+f.close()
+
+# write
+f = open(path + "data.txt", "w")
+f.write(str(data))
+f.close()
+
+f = open(path + "data.txt", "r")
+data = eval(f.read())
+f.close()
