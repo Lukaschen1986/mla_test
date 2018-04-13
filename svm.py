@@ -102,7 +102,8 @@ class SvmTrain(object):
                 Ki = kernel_func(X, X[i])
                 ui = (a*y).T.dot(Ki) + b
                 Ei = ui - y[i]
-                if y[i]*Ei >= 1 and a[i] > 0 or y[i]*Ei <= 1 and a[i] < self.C or y[i]*Ei == 1 and a[i] == 0 or y[i]*Ei == 1 and a[i] == self.C:
+                #if y[i]*Ei >= 0 and a[i] > 0 or y[i]*Ei <= 0 and a[i] < self.C or y[i]*Ei == 0 and a[i] == 0 or y[i]*Ei == 0 and a[i] == self.C:
+                if y[i]*ui >= 1 and a[i] > 0 or y[i]*ui <= 1 and a[i] < self.C or y[i]*ui == 1 and a[i] == 0 or y[i]*ui == 1 and a[i] == self.C:
                     # Pick random i
                     j = self.random_idx(i,n)
                     # Error for i
@@ -113,7 +114,7 @@ class SvmTrain(object):
                     L, H = self.find_bounds(a, i, j)
                     # 计算eta
                     eta = K[i,i] + K[j,j] - 2*K[i,j]
-#                    if eta <= 0: continue
+                    #if eta <= 0: continue
                     # Save old alphas
                     ai_old, aj_old = a[i], a[j]
                     # Update alpha
