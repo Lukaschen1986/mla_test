@@ -120,7 +120,7 @@ class SvmTrain(object):
                     # Update alpha
                     a[j] = aj_old + y[j]*(Ei-Ej)/eta
                     a[j] = self.clip(a[j], L, H)
-                    a[i] = ai_old + y[j]/y[i]*(aj_old-a[j])
+                    a[i] = ai_old + y[i]*y[j]*(aj_old-a[j])
                     # Find intercept
                     b1 = b - Ei - y[i]*(a[i]-ai_old)*K[i,i] - y[j]*(a[j]-aj_old)*K[i,j]
                     b2 = b - Ej - y[i]*(a[i]-ai_old)*K[i,j] - y[j]*(a[j]-aj_old)*K[j,j]
