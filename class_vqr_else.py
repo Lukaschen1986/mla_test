@@ -1,3 +1,5 @@
+# http://scikit-learn.org/stable/modules/model_evaluation.html
+
 n_estimators_0 = 200
 clf = XGBClassifier(
         # General Parameters
