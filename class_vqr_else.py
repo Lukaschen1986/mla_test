@@ -18,7 +18,7 @@ clf = XGBClassifier(
         max_delta_step=0, # default=0, 限制每棵树权重改变的最大步长, 如果参数设置为0，表示没有限制。如果设置为一个正值，会使得更新步更加谨慎和保守, 通常，这个参数不需要设置。但是当在逻辑回归中，各类别的样本十分不平衡时它是很有帮助的
         scale_pos_weight=1, # default=1, 在各类别样本十分不平衡时，把这个参数设定为一个正值，可以使算法更快收敛
         # Learning Task Parameters
-        objective="binary:logistic", # binary:logistic; multi:softmax; multi:softprob
+        objective="binary:logistic", # binary:logistic; binary:logitraw; multi:softmax; multi:softprob; reg:linear; reg:logistic; count:poisson; rank:pairwise
         eval_metric="auc", #  default according to objective: rmse, mae, logloss, error, merror, mlogloss, auc
 #        num_class=len(set(y_train)),
         seed=1
