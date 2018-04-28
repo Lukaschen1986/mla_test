@@ -3,7 +3,7 @@ import pandas as pd
 from impala.dbapi import connect
 from impala.util import as_pandas
 import pymysql
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, types
 
 # Hive
 class HiveClient(object):
@@ -31,5 +31,16 @@ conn.commit()
 df = pd.read_sql(sql="", con=conn)
 conn.close()
 
-engine = create_engine("mysql+pymysql://bds:pJdsS$00@10.250.33.163:3311/BigDataService?charset=utf8")
-df.to_sql(name="t_api_callnum_alarm_2", con=engine, if_exists="append", index=False)
+engine = create_engine("mysql+pymysql://slusr:WW6LYvC6@10.171.199.172:3306/sl01?charset=utf8")
+df_iair_historyprice.to_sql(name="t_iair_historyprice", con=engine, if_exists="replace", chunksize=None, 
+                            index=True, index_label="RecordID",
+                            dtype={"RecordID": types.INT(),
+                                   "RangeType": types.VARCHAR(2),
+                                   "DepatureCity3Code": types.VARCHAR(3),
+                                   "ArrivalCity3Code": types.VARCHAR(3),
+                                   "BunkGrade": types.VARCHAR(2),
+                                   "UserCoverRate": types.VARCHAR(2),
+                                   "HistoryPrice": types.FLOAT(precision=2),
+                                   "CurrencyCode": types.VARCHAR(3),
+                                   "CreateTime": types.DATETIME(),
+                                   "LastModifyTime": types.TIMESTAMP()})
