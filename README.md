@@ -1,4 +1,14 @@
-# mla_test
+# machine learning algorithm test
+## 算法选型指导
+http://scikit-learn.org/stable/tutorial/machine_learning_map/
+https://docs.microsoft.com/zh-cn/azure/machine-learning/studio/algorithm-cheat-sheet
+![](https://github.com/Lukaschen1986/mla_test/raw/master/pic/ml_map.PNG)
+
+
+
+
+
+
 ## bayesian_networks.py
 ### 1、算法推导
 ![](https://github.com/Lukaschen1986/mla_test/raw/master/pic/1.PNG)
