@@ -1,3 +1,39 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function
+import numpy as np
+import pandas as pd
+from sklearn_pandas import DataFrameMapper
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import LabelBinarizer
+from keras.utils.np_utils import to_categorical
+
+# lambda
+oht = lambda y: np.eye(len(set(y)))[y]
+
+# map
+y_dict = {"<=50K": 0, ">50K": 1}
+y_oht = y.map(y_dict)
+
+# pd.get_dummies
+df = pd.get_dummies(df, columns=[], drop_first=False, dummy_na=False)
+col = pd.get_dummies(col, drop_first=False, dummy_na=False)
+
+# DataFrameMapper
+mapper = DataFrameMapper(
+        features=[
+                ([col], OneHotEncoder()) # LabelBinarizer()
+                ],
+        default=False # False 全部丢弃（默认）；None 原封不动地保留
+        )
+mapper_fit = mapper.fit(df_train)
+df_train_transform = mapper_fit.transform(df_train)
+df_test_transform = mapper_fit.transform(df_test)
+
+# keras
+y_oht = to_categorical(y)
+
+-----------------------------------------------------------------------------------
+
 from keras.utils.np_utils import to_categorical
 import pandas as pd
 
