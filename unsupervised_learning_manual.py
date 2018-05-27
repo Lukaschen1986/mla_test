@@ -114,3 +114,10 @@ pd.DataFrame(gmm_res).to_csv("D:/my_project/Python_Project/udacity/creating_cust
 
 fig=10; ax=6
 cluster_result(x_pca, gmm_labels, mu_group, fig, ax)
+
+def silhouette_samples_manual(X, labels):
+    df = pd.DataFrame(np.concatenate((labels[:,np.newaxis], X), axis=1))
+    df = df.set_index(0)
+    
+    dist_1 = np.sum((df.iloc[0,:]-df)**2, axis=1)
+    dist_1.groupby(dist_1.index).mean()
