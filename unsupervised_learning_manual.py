@@ -115,9 +115,31 @@ pd.DataFrame(gmm_res).to_csv("D:/my_project/Python_Project/udacity/creating_cust
 fig=10; ax=6
 cluster_result(x_pca, gmm_labels, mu_group, fig, ax)
 
-def silhouette_samples_manual(X, labels):
-    df = pd.DataFrame(np.concatenate((labels[:,np.newaxis], X), axis=1))
-    df = df.set_index(0)
+
+def silhouette(X, labels):
+    # 将标签和数据合并，标签在前，置为索引
+    df = pd.DataFrame(np.concatenate((labels[:,np.newaxis], X), axis=1)).set_index(0)
+    # 迭代每个样本点
+    s_samples = []
+    for i in range(len(df)):
+        # 计算样本点与所有点的欧氏距离
+        dist = np.sqrt(np.sum((df.iloc[i,:]-df)**2, axis=1))
+        # 剔除样本点自身
+        dist = dist[dist != 0.0]
+        # 按聚类标签聚合均值
+        groupby_dist = dist.groupby(dist.index).mean()
+        df_dist = pd.DataFrame(groupby_dist, columns=["dist_avg"])
+        # 在聚合数据中取出样本点所在类的均值 和 其余类的均值
+        dist_avg_inner = df_dist[df_dist.index == df.index[i]].values
+        dist_avg_outer = df_dist[df_dist.index != df.index[i]].values
+        # 令 a = 所在类的均值; b = 其余类的均值的最小值
+        a = dist_avg_inner[0][0]
+        b = np.min(dist_avg_outer)
+        # 计算silhouette_samples
+        s = (b-a) / np.max((a,b))
+        s_samples.append(s)
     
-    dist_1 = np.sum((df.iloc[0,:]-df)**2, axis=1)
-    dist_1.groupby(dist_1.index).mean()
+    s_samples = np.array(s_samples)
+    # 计算silhouette_score
+    s_score = np.mean(s_samples)
+    return s_samples, s_score
