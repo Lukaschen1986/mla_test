@@ -1,4 +1,5 @@
 # http://scikit-learn.org/stable/modules/model_evaluation.html
+# https://blog.csdn.net/zhangf666/article/details/70183788
 
 n_estimators_0 = 200
 clf = XGBClassifier(
