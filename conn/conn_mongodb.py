@@ -36,5 +36,6 @@ for data in my_set.find():
     print(data)
 
 check_data = {"comment": "test_comment_4"}
+check_data = {"hotelid":100001328, "roomtypeid":100004658, "roomstatedate":{$gte:"20180701", $lte:"20180826"}}
 for data in my_set.find(check_data):
     print(data)
