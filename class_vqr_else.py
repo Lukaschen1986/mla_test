@@ -13,13 +13,13 @@ clf = XGBClassifier(
         n_estimators=n_estimators_0, # Number of boosted trees to fit
         gamma=0, # default=0, 只有当分裂使loss减小的值大于gamma，节点才分裂。设置为0，表示只要loss函数减少，就分裂
         max_depth=6, # default=6, 设置树的最大深度, 如果树的深度太大会导致过拟合, 应该使用CV来调节。Typical values: 3-10
-        min_child_weight=1, # default=1, 这个参数用来控制过拟合, 应该使用CV来调节。
+        min_child_weight=1, # default=1, 这个参数用来控制过拟合, 应该使用CV来调节。控制每个叶子节点二阶导的和 H 的最小值，假设h=0.01，参数=1，则意味着叶子节点中至少需要包含100个样本
         subsample=0.8, # default=1, 每棵树随机采样的比例, 减小参数可防止过拟合, Typical values: 0.5-1
         colsample_bytree=0.8, # default=1, 每棵树列采样的比例, Typical values: 0.5-1
         reg_alpha=0, # default=0, L1正则化项, 可以应用在很高维度的情况下，使得算法的速度更快
         reg_lambda=1, # default=1, L2正则化项, 虽然大部分数据科学家很少用到这个参数
-        max_delta_step=0, # default=0, 限制每棵树权重改变的最大步长, 如果参数设置为0，表示没有限制。如果设置为一个正值，会使得更新步更加谨慎和保守, 通常，这个参数不需要设置。但是当在逻辑回归中，各类别的样本十分不平衡时它是很有帮助的
-        scale_pos_weight=1, # default=1, 在各类别样本十分不平衡时，把这个参数设定为一个正值，可以使算法更快收敛
+        max_delta_step=0, # default=0, 限制每棵树权重改变的最大步长, 如果参数设置为0，表示没有限制。如果设置为一个正值[0,10]，会使得更新步更加谨慎和保守, 通常，这个参数不需要设置。但是当在逻辑回归中，各类别的样本十分不平衡时它是很有帮助的
+        scale_pos_weight=1, # default=1, 在各类别样本十分不平衡时，把这个参数设定为一个正值，可以使算法更快收敛。对应auc评价，该参数就是正样本的权重系数
         # Learning Task Parameters
         objective="binary:logistic", # binary:logistic; binary:logitraw; multi:softmax; multi:softprob; reg:linear; reg:logistic; count:poisson; rank:pairwise
         eval_metric="auc", #  default according to objective: rmse, mae, logloss, error, merror, mlogloss, auc
