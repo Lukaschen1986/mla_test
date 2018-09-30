@@ -36,6 +36,22 @@ for data in my_set.find():
     print(data)
 
 check_data = {"comment": "test_comment_4"}
-check_data = {"hotelid":100001328, "roomtypeid":100004658, "roomstatedate":{$gte:"20180701", $lte:"20180826"}}
+check_data = {"hotelid":100001328, "roomtypeid":100004658, "roomstatedate":{"$gte": "20180701", "$lte": "20180826"}}
 for data in my_set.find(check_data):
     print(data)
+
+##################################################################################################################
+conn = MongoClient(host="", port="", unicode_decode_error_handler="ignore")
+db = conn.sgp_hotel
+my_set = db.t_hotel_roomtype_log
+
+dataSet_stock = []
+columns = {"optime":1, "roomtypeid": 1, "opcontent": 1}
+check_data = {"optime": {"$gte": begin_time_str2, "$lt": statis_time_str2}}
+
+for data in my_set.find(check_data, columns):
+    dataSet_stock.append(data)
+    if len(dataSet_stock) % 100000 == 0:
+        print("n: %d" % len(dataSet_stock))
+
+dataSet_stock = pd.DataFrame.from_dict(dataSet_stock)
