@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+import socket
+
 def server_func(addr_server, response):
     print("Server Start......")
     # 建立socket
