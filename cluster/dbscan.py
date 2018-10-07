@@ -86,11 +86,15 @@ def dbscan(data, eps, min_samples):
     labels = [unclassified] * n # 类别标记初始化
     # 依次循环所有样本点
     for pid in range(n):
+        # 如果该点未被标记过，则执行分类函数计算
         if labels[pid] == unclassified:
+            # 如果满足分类计算条件，则输出True，并类别记号+1
             if expand_cluster(data, labels, pid, cls_id, eps, min_samples):
                 cls_id += 1
+            # 如果不满足分类条件，则跳过
             else:
                 continue
+        # 如果该点已被标记，则跳过不再重复计算
         else:
             continue
     return labels
