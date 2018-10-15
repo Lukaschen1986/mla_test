@@ -1,7 +1,6 @@
 # 遗传算法  
 ## 过程图解  
-# https://www.jianshu.com/p/077d7acc4df8
-![](https://github.com/Lukaschen1986/mla_test/tree/master/data_process/pic/)
+![](https://github.com/Lukaschen1986/mla_test/tree/master/data_process/pic/1956855-bc8b24c6118a5b55.png)
 
 ## 优点  
 #### 1、基于群体的搜索，具备进化能力，不是穷举搜索（穷举式搜索指的是对特征空间每一个特征进行评价和度量，可以搜索到每个特征子集。通常开销大，计算时间长，不适合大规模的数据处理。）  
