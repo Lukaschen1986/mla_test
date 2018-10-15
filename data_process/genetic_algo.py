@@ -7,18 +7,10 @@ import copy
 from sklearn.model_selection import train_test_split
 from sklearn import linear_model
 from sklearn.metrics import r2_score
-from scipy.stats import itemfreq
+#from scipy.stats import itemfreq
+from tpot import TPOTRegressor
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("swiss.csv")
-df_train, df_test = train_test_split(df, test_size=0.3)
-
-x_train = df_train.iloc[:,0:5]
-y_train = df_train.iloc[:,5]
-x_test = df_test.iloc[:,0:5]
-y_test = df_test.iloc[:,5]
-
-_, DNA_size = x_train.shape
 
 def cal_time(func):
     def inner(*args, **kwargs):
@@ -29,6 +21,7 @@ def cal_time(func):
         print("Time cost {}".format(t_delta))
         return res
     return inner
+
 
 class GeneticAlgorithm(object):
     def __init__(self, DNA_size, n_population, cross_rate, mutate_rate, steps):
@@ -47,7 +40,7 @@ class GeneticAlgorithm(object):
         return population
     
     # 适应度函数：应算法选择而异
-    def fitness(self, population):
+    def fitness(self, population, x_train, y_train, x_test, y_test):
         fitness_score = []
         
         for i in range(len(population)):
@@ -63,7 +56,7 @@ class GeneticAlgorithm(object):
             # 模型评估
             r2 = r2_score(y_test, y_hat)
             fitness_score.append(r2)
-        
+        # 调整 fitness_score
         fitness_score = np.array(fitness_score)
         fitness_score = np.where(fitness_score < 0, 0, fitness_score) # 针对r2的调整
         return fitness_score
@@ -107,14 +100,14 @@ class GeneticAlgorithm(object):
     
     # 演化过程
     @cal_time
-    def evolution(self):
+    def fit(self, x_train, y_train, x_test, y_test):
         # 第一步，初始化种群
         population = self.bulid_population()
         fitness_res = []
         
         for step in range(self.steps):
             # 第二步，适应度函数，计算种群中每个样本的适应度值(fitness_score)
-            fitness_score = self.fitness(population)
+            fitness_score = self.fitness(population, x_train, y_train, x_test, y_test)
             # 第三步，选择，进行自然选择，选出基因好的个体作为父代
             population = self.select(population, fitness_score)
             population_copy = copy.deepcopy(population)
@@ -143,6 +136,24 @@ class GeneticAlgorithm(object):
     
     
 if __name__ == "__main__":
+    df = pd.read_csv("swiss.csv")
+    df_train, df_test = train_test_split(df, test_size=0.3)
+    
+    x_train = df_train.iloc[:,0:5]
+    y_train = df_train.iloc[:,5]
+    x_test = df_test.iloc[:,0:5]
+    y_test = df_test.iloc[:,5]
+
+    _, DNA_size = x_train.shape
+    
+    # class
     GA = GeneticAlgorithm(DNA_size=DNA_size, n_population=300, cross_rate=0.9, mutate_rate=0.0, steps=100)
-    population, fitness_res, fitness_score = GA.evolution()
+    population, fitness_res, fitness_score = GA.fit(x_train, y_train, x_test, y_test)
     plt.plot(fitness_res)
+    
+    # tpot
+    tpot = TPOTRegressor(generations=100, population_size=300, crossover_rate=0.9, mutation_rate=0.0, cv=3, n_jobs=-1)
+    tpot.fit(x_train, y_train)
+    print(tpot.score(x_test, y_test))
+    tpot.export('tpot_boston_pipeline.py')
+        
