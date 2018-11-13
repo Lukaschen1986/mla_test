@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# https://blog.csdn.net/Chloezhao/article/details/53465167
+# https://github.com/coreylynch/pyFM
 from __future__ import absolute_import, division, print_function
 import os
 os.getcwd()
@@ -9,110 +11,123 @@ import pandas as pd
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, confusion_matrix
-import tushare as ts
 from statsmodels.tsa.stattools import adfuller
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
+from sklearn_pandas import DataFrameMapper
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import LabelBinarizer
 
-txt_path = "D:\\my_project\\Python_Project\\quant\\"
 
-types = {"mpg": np.int64,
-         "disp": np.float64,
-         "hp": np.float64,
-         "drat": np.float64,
-         "wt": np.float64,
-         "qsec": np.int64,
-         "vs": np.int64,
-         "am": np.int64,
-         "gear": np.int64,
-         "carb": np.int64,
-         "cyl": np.int64}
-
-df = pd.read_csv(txt_path + "mtcars2.csv")
-df.vs = df.vs.astype(np.uint8)
-df.am = df.am.astype(np.uint8)
-df.hp = df.hp.astype(np.float64)
-df = shuffle(df, random_state=0)
-
-y = df.iloc[:,0].values
-x = df.iloc[:,1:]
-x = pd.get_dummies(x, columns=["gear","carb","cyl"], drop_first=False).values
-
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
-
-#avg = np.mean(x_train[["disp","hp","drat","wt","qsec"]], axis=0)
-#std = np.std(x_train[["disp","hp","drat","wt","qsec"]], axis=0)
-#x_train[["disp","hp","drat","wt","qsec"]] = (x_train[["disp","hp","drat","wt","qsec"]] - avg) / std
-#x_test[["disp","hp","drat","wt","qsec"]] = (x_test[["disp","hp","drat","wt","qsec"]] - avg) / std
-
-avg = np.mean(x_train[:,0:5], axis=0)
-std = np.std(x_train[:,0:5], axis=0)
-x_train[:,0:5] = (x_train[:,0:5] - avg) / std
-x_test[:,0:5] = (x_test[:,0:5] - avg) / std
-
-nrow, ncol = x_train.shape
-k = 2
-v = np.random.rand(ncol, k)
-#v = np.random.randn(ncol, k)
-#arrayvt = np.random.rand(k, len(x_train.columns))
-#v = pd.DataFrame(arrayv, columns=range(0,k), index=x_train.columns)
-#vt = pd.DataFrame(arrayvt, columns=x_train.columns, index=range(0,k))
-
-w = np.zeros((ncol, 1)) + 0.001
-b = np.zeros((1, 1))
-
-lost_log = []
-y = np.expand_dims(y_train, axis=1)
-#y = y_train
-x = x_train
-
-unit_vector = lambda x: x / np.sqrt(np.sum(x**2, axis=0))
-eta = 0.01
-tol = 10**-8
-max_iter = 5000
-lam = 0.001
-
-#b + x.dot(w) + np.sum(x.dot(v)**2-(x**2).dot(v**2), axis=1) / 2.0
-
-#z = b + x.dot(w).T + np.sum(x.dot(v)**2-(x**2).dot(v**2), axis=1) / 2.0
-#
-#np.log(1 + np.exp(-y * x.dot(w)))
-#np.sum(np.log(1 + np.exp(-y*z))) / nrow + lam*w.T.dot(w)[0][0]/nrow/2.0
-
-for i in range(max_iter):
-#    i = 0
-    z = b + x.dot(w).T + np.sum(x.dot(v)**2-(x**2).dot(v**2), axis=1) / 2.0
+class FM(object):
+    def __init__(self, k, max_iter, lam, eta, tol):
+        self.k = k
+        self.max_iter = max_iter
+        self.lam = lam
+        self.eta = eta
+#        self.decay = decay
+        self.tol = tol
     
     
+    def fit(self, x, y):
+        # 单位向量
+        unit_vector = lambda x: x / np.sqrt(np.sum(x**2, axis=0))
+        # 参数初始化
+        nrow, ncol = x.shape
+        # w初始化
+        if np.linalg.det(x.T.dot(x) + np.eye(ncol)*self.lam) == 0:
+            w = np.zeros((ncol, 1)) + 0.001
+        else:
+            w = np.linalg.inv(x.T.dot(x) + np.eye(ncol)*self.lam).dot(x.T).dot(y)
+        # b初始化
+        b = np.zeros((1, 1))
+        # v初始化
+        v = np.random.randn(ncol, self.k) * 0.01
+        # 迭代训练
+        obj_log = []; gv_total = 0
+        for i in range(self.max_iter):
+            z = b + x.dot(w).T + np.sum(x.dot(v)**2-(x**2).dot(v**2), axis=1) / 2.0
+        #    z = b + x.dot(w).T
+            z = z.T
+            # 计算梯度
+            gb = -y.T.dot(1/(1+np.exp(y*z))) / nrow
+            gw = (-y*x).T.dot(1/(1+np.exp(y*z))) / nrow + self.lam*w/nrow
+            gw = unit_vector(gw)
+            gv = x.T.dot(x.dot(v) - (x**2).dot(v))
+            gv = unit_vector(gv)
+            gv_total += gv
+            # 梯度下降
+            b -= self.eta * gb
+            w -= self.eta * gw
+            v -= self.eta / np.sqrt(1+np.sum(gv_total**2)) * gv
+        #    v -= eta*(1-decay)**i * gv
+            # 目标函数值
+            obj = np.sum(np.log(1+np.exp(-y*z))) / nrow + self.lam*np.sum(w**2)/nrow/2.0
+            obj_log.append(obj)
+            # break condition
+            if (i >= 1) and (np.abs(obj_log[i]-obj_log[i-1]) <= self.tol):
+                break
+        return obj_log, b, w, v
+        
     
-    gb = -y.T.dot(1/(1+np.exp(y*x.dot(w)))) / nrow
+    def predict(self, x, b, w, v, threshold):
+        z_pred = b + x.dot(w).T + np.sum(x.dot(v)**2-(x**2).dot(v**2), axis=1) / 2.0
+        z_pred = z_pred.T
+        y_pred = 1 / np.log(1+np.exp(-z_pred))
+        y_hat = np.where(y_pred > threshold, 1, -1).T[0]
+        return y_hat
     
-    gw = (-y*x).T.dot(1/(1+np.exp(y*x.dot(w)))) / nrow + lam*w/nrow
-    gw = unit_vector(gw)
     
-    gv = x.T.dot(x.dot(v) - (x**2).dot(v))
-    gv = unit_vector(gv)
+    def metrics(self, y_true, y_hat):
+        accu = sum(y_hat == y_true) / len(y_true)
+        return accu
+
+if __name__ == "__main__":
+    #txt_path = "D:\\my_project\\Python_Project\\quant\\"
+    txt_path = "D:\\my_project\\Python_Project\\iTravel\\itravel_mem_label\\script\\"
     
-    b -= eta * gb
-    w -= eta * gw
-    v -= eta * gv    
+    df = pd.read_csv(txt_path + "mtcars2.csv")
+    df.hp = df.hp.astype(np.float64)
+    df = shuffle(df, random_state=0)
+    df_train, df_test = train_test_split(df, test_size=0.3, random_state=0) # test_sizes=0.3
     
-    z = b + x.dot(w).T + np.sum(x.dot(v)**2-(x**2).dot(v**2), axis=1) / 2.0
-    lost = np.sum(np.log(1 + np.exp(-y*z))) / nrow + lam*w.T.dot(w)[0][0]/nrow/2.0
-    lost_log.append(lost)
-    # break condition
-    if (i >= 1) and (np.abs(lost_log[i]-lost_log[i-1]) <= tol):
-        break
+    mapper = DataFrameMapper(
+            features=[
+                    (["mpg"], None),
+                    (["disp"], None),
+                    (["hp"], None),
+                    (["drat"], None),
+                    (["wt"], None),
+                    (["qsec"], None),
+                    (["vs"], LabelBinarizer()),
+                    (["am"], LabelBinarizer()),
+                    (["gear"], OneHotEncoder()),
+                    (["carb"], OneHotEncoder()),
+                    (["cyl"], OneHotEncoder()),
+                    ],
+            default=False # None 保留; False 丢弃
+            )
 
-
-plt.plot(lost_log)
-min(lost_log)
-
-std_scale = StandardScaler()
-std_scale_fit = std_scale.fit(x_train[["disp","hp","drat","wt"]])
-std_scale_fit.transform(x_train[["disp","hp","drat","wt"]])
-
-
-
-
+    mapper_fit = mapper.fit(df_train)
+    df_train_transform = mapper_fit.transform(df_train)
+    df_test_transform = mapper_fit.transform(df_test)
+    
+    feat_name = pd.get_dummies(df_train, columns=["gear","carb","cyl"], drop_first=False, dummy_na=False).columns[1:]
+    
+    x_train = df_train_transform[:,1:]
+    y_train = df_train_transform[:,0]
+    x_test = df_test_transform[:,1:]
+    y_test = df_test_transform[:,0]
+    
+    avg = np.mean(x_train[:,0:5], axis=0)
+    std = np.std(x_train[:,0:5], axis=0)
+    x_train[:,0:5] = (x_train[:,0:5] - avg) / std
+    x_test[:,0:5] = (x_test[:,0:5] - avg) / std
+    
+    fm = FM(k=4, max_iter=2000, lam=0.0001, eta=0.01, tol=10**-8)
+    obj_log, b, w, v = fm.fit(x_train, y_train)
+    plt.plot(obj_log); min(obj_log)
+    y_hat = fm.predict(x_test, b, w, v, threshold=0.5)
+    accu = fm.metrics(y_test, y_hat)
+    print(accu)
