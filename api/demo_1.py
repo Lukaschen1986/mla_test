@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# https://www.bilibili.com/video/av37012291/?p=8
 from flask import Flask
 from flask_script import Manager # 命令行参数接收 shell, runserver
 
