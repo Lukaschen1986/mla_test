@@ -4,71 +4,51 @@ from flask import Flask, abort, request, jsonify
 import pickle
 import numpy as np
 import pandas as pd
-import pymysql
 
 app = Flask(__name__)
 
-@app.route("/add", methods=["POST"])
-def add_func():
-    # conn
-    conn = pymysql.connect(host="127.0.0.1", user="root", passwd="chen1986", db="test", port=3306, charset="utf8")
-    cur = conn.cursor()
-    # add_info
-    add_info = {
-            "MemberID": request.json["MemberID"],
-            "UserName": request.json["UserName"],
-            "Age": request.json["Age"]
-            }
-    sql = "INSERT INTO t_test VALUES({0},{1},{2})".format(add_info["MemberID"], add_info["UserName"], add_info["Age"])
-    # execute
-    cur.execute(sql)
-    conn.commit()
-    print(sql)
-    # close
-    conn.close()
-    return "insert data success"
+@app.route("/predict", methods=["POST","GET"])
+def predict_func():
+    # get params
+    Agriculture = request.args["Agriculture"]
+    Examination = request.args["Examination"]
+    Education = request.args["Education"]
+    Catholic = request.args["Catholic"]
+    InfantMortality = request.args["InfantMortality"]
+    print(Agriculture, Examination, Education, Catholic, InfantMortality)
+    # modify type
+    Agriculture = np.float64(Agriculture)
+    Examination = np.int64(Examination)
+    Education = np.int64(Education)
+    Catholic = np.float64(Catholic)
+    InfantMortality = np.float64(InfantMortality)
+    # DataFrame
+    x_predict = pd.DataFrame({"Agriculture": [Agriculture],
+                              "Examination": [Examination],
+                              "Education": [Education],
+                              "Catholic": [Catholic],
+                              "InfantMortality": [InfantMortality]}, columns=["Agriculture","Examination","Education","Catholic","InfantMortality"])
+    # data process
+    txt_path = "D:/my_project/Python_Project/iTravel/flask/txt/"
+    with open(txt_path + "process_fit.txt", "rb") as f:
+        process_fit = pickle.load(f)
+    x_pred_new = process_fit.transform(x_predict)
+    # data predict
+    with open(txt_path + "clf_fit.txt", "rb") as f:
+        clf_fit = pickle.load(f)
     
-
-@app.route('/<int:id>', methods=['GET'])
-def query(id):
-    # 连接数据库
-    conn = pymysql.connect(host="127.0.0.1", user="root", passwd="chen1986", db="test", port=3306, charset="utf8")
-    cur = conn.cursor()
-    # 执行sql语句
-    sql = "select MemberID,UserName,Age from t_test where MemberID = " + str(id)
-    cur.execute(sql)
-    result = cur.fetchall()
-    print(sql)
-    # 关闭连接
-    conn.close()
-    return jsonify(
-         {
-             'MemberID': result[0][0],
-             'UserName': result[0][1],
-             'Age': result[0][2],
-         })
-
-
-@app.errorhandler(404)
-def page_not_found(e):
-    res = jsonify({'error': 'not found'})
-    res.status_code = 404
+    y_hat = clf_fit.predict_proba(x_pred_new)
+    y_pred = np.argmax(y_hat, axis=1)
+    y_pred = np.float64(y_pred[0])
+    print("y_pred: ", y_pred)
+    # response
+    res = jsonify(y_pred=y_pred)
     return res
 
-#DROP TABLE IF NOT EXISTS t_test;
-#CREATE TABLE t_test (
-#	MemberID INT UNSIGNED NOT NULL auto_increment COMMENT '用户ID',
-#	UserName VARCHAR(20) NOT NULL COMMENT '用户名',
-#	Age INT UNSIGNED NOT NULL COMMENT '年龄',
-#	PRIMARY KEY(MemberID)
-#);
-#SELECT * FROM t_test;
 
 if __name__ == "__main__":
     # 将host设置为0.0.0.0，则外网用户也可以访问到这个服务
-    app.run(host="127.0.0.1", port=5000, debug=True)
-
-
+    app.run(host="127.0.0.1", port=5000, debug=False)
 
 
 
