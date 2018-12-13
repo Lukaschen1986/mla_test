@@ -20,7 +20,32 @@ def get_func(name):
     print(name)
     return "get success"
 
+@app.route("/request/", methods=["POST","GET"])
+def request_func():
+#    print(request.args)
+#    print(request.form)
+#    print(request.data)
+    print(request.args["name"])
+    print(request.args.get("name"))
+    print(request.args.getlist())
+    
+    name = request.args["name"]
+    score_1 = request.args["score_1"]
+    score_2 = request.args["score_2"]
+    
+    score_1 = np.float(score_1)
+    score_2 = np.float(score_2)
+#    
+    score = score_1 + score_2
+    res = jsonify(name=name, score=score) # Response
+#    res = jsonify({"name": name, "score": score}) # Response
+#    res = json.dumps({"name": name, "score": score}) # str
+#    res = Response(response='{"name": name, "score": score}', content_type='application/json')
+    return res
 
+@app.route("/abort/")
+def abort_func():
+    abort(400)
 
 
 
