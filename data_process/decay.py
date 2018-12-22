@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# https://www.jiqizhixin.com/articles/2018-12-18-24 # 用一条数学公式破解人类记忆
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
