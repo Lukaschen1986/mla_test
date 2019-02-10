@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>日记列表</title>
+</head>
+<body>
+    <h1>日记列表</h1>
+<table>
+    <tr>
+        <th>id</th>
+        <th>天气</th>
+        <th>心情</th>
+        <th>内容</th>
+        <th>日期</th>
+    </tr>
+    {% for item in diary_list %}
+        <tr>
+            <td>{{ item['id'] }}</td>
+            <td>{{ item['weather'] }}</td>
+            <td>{{ item['mood'] }}</td>
+            <td>{{ item['content'] }}</td>
+            <td>{{ item['c_time'] }}</td>
+        </tr>
+    {% end %}
+</table>
+</body>
+</html>
