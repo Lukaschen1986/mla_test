@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# https://zh.wikipedia.org/wiki/Dice%E7%B3%BB%E6%95%B0
 from __future__ import absolute_import, division, print_function
 import numpy as np
 
