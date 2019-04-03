@@ -63,7 +63,8 @@ class LogisticRegression(object):
 
 class Adaboost(LogisticRegression):
     def __init__(self, eta, max_iter, tol, threshold, steps):
-        LogisticRegression.__init__(self, eta, max_iter, tol, threshold)
+        #LogisticRegression.__init__(self, eta, max_iter, tol, threshold)
+        super(Adaboost, self).__init__(eta, max_iter, tol, threshold)
         self.steps = steps
     
     def init_weights(self, x):
