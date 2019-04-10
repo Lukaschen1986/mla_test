@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
+# 新闻
 # https://www.jiqizhixin.com/articles/2019-02-27-6
+# 论文
+# https://openreview.net/pdf?id=Bkg3g2R9FX
+# 代码
 # https://github.com/Luolc/AdaBound
 
 import numpy as np
