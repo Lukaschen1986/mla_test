@@ -148,8 +148,6 @@ def train_lgb(x_train_sparse, y_train, x_valid_sparse, y_valid, feat_names,
     # print("param has saved.")
     return model_lgb
 
-
-
 if __name__ == "__main__":
     dataSet = pd.read_csv("swiss2.csv")
     dataSet = shuffle(dataSet, random_state=0)
@@ -168,6 +166,16 @@ if __name__ == "__main__":
     # 转为稀疏矩阵
     x_train_sparse = sparse.csr_matrix(x_train)
     x_test_sparse = sparse.csr_matrix(x_test)    
+    ......
+    
+    model_dump = model_lgb.dump_model(num_iteration=-1)
 
+    #df_feats = pd.DataFrame({"feat_names": feat_names,
+    #                         "importances": model_lgb.feature_importance(importance_type="split")})
+    #df_feats = df_feats.set_index("feat_names").sort_values(by="importances", ascending=True)
+    #df_feats.plot(kind="barh", title="feature_importances", grid=True, figsize=(12,31))
+    lgb.plot_importance(model_lgb, max_num_features=30, importance_type="split",
+                        figsize=(12,31), title="LightGBM Feature Importance")
+    lgb.plot_tree(model_lgb, tree_index=0, figsize=(12,31))
         
     
