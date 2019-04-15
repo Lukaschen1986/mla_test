@@ -20,7 +20,7 @@ LightGBM can use categorical features as input directly. It doesn’t need to co
 Note: You should convert your categorical features to int type before you construct Dataset.
 '''
 
-ddef get_lgb_data(x_train_sparse, y_train, x_valid_sparse, y_valid, feat_names):
+def get_lgb_data(x_train_sparse, y_train, x_valid_sparse, y_valid, feat_names):
     d_train = lgb.Dataset(data=x_train_sparse, label=y_train, feature_name=feat_names)
     d_valid = lgb.Dataset(data=x_valid_sparse, label=y_valid, feature_name=feat_names, reference=d_train)
     valid_sets = [d_valid, d_train]
