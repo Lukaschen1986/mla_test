@@ -28,10 +28,10 @@ class SvmModel(object):
     
     def poly_kernel(self, x1, x2):
         '''多项式核函数'''
-        seta = self.kernel_params.get("seta", 1.0)
+        zeta = self.kernel_params.get("zeta", 1.0)
         gamma = self.kernel_params.get("gamma", 1.0)
         degree = self.kernel_params.get("degree", 3.0)
-        res = (seta + gamma*x1.dot(x2.T))**degree
+        res = (zeta + gamma*x1.dot(x2.T))**degree
         return res
     
     
@@ -118,6 +118,8 @@ class SvmModel(object):
             K = self.poly_kernel(x_train, x_train)
         elif self.kernel == "rbf":
             K = self.rbf_kernel(x_train, x_train)
+        else:
+            raise ValueError("kernel must be 'linear', 'poly' or 'rbf'")
         # 参数初始化
         N = len(x_train)
         a = np.zeros([N])
@@ -176,6 +178,8 @@ class SvmModel(object):
             K = self.poly_kernel(x_train, x_predict)
         elif self.kernel == "rbf":
             K = self.rbf_kernel(x_train, x_predict)
+        else:
+            raise ValueError("kernel must be 'linear', 'poly' or 'rbf'")
         # 预测
         y_pred = np.sign((a * y_train).dot(K) + b)
         return y_pred
@@ -208,7 +212,7 @@ if __name__ == "__main__":
     E_res, a_res, b_res = model.fit(x_train, y_train)
     
     # poly
-#    model = SvmModel(C=1.0, kernel="poly", kernel_params={"seta":1.0, "gamma":0.01, "degree":3.0}, 
+#    model = SvmModel(C=1.0, kernel="poly", kernel_params={"zeta":1.0, "gamma":0.01, "degree":3.0}, 
 #                     max_iter=1000, tol=10**-4, eps=10**-6)
 #    E_res, a_res, b_res = model.fit(x_train, y_train)
     
